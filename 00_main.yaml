@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Calls OpenShift templates to create resources
+
+# TODO: Placeholder for Mappings
+#Mappings:
+#  ClassificationMap:
+#      "Unclassified":
+#        ClassificationText: "UNCLASSIFIED"
+#        ClassificationScript: unclassified.js
+#        ClassificationColor: "#5cb85c"
+#      "Confidential":
+#        ClassificationText: "CONFIDENTIAL"
+#        ClassificationScript: confidential.js
+#        ClassificationColor: "#286090"
+
+# TODO: Placeholder for conditions
+#Conditions:
+#  CreateIAMResources: !Equals [ !Ref CreateIAMStack, true ]
+#  CreateDNSResources: !Equals [ !Ref CreateElb, true ]
+#  CreateAlarmResources: !Equals [ !Ref EnableAlarms, true ]
+#  CreateStorageResources: !Not [ !Equals [!Ref NumberOfComputeStorages, 0]]
+#  CreateStorageCloudwatch: !And
+#  - !Condition CreateAlarmResources
+#  - !Condition CreateStorageResources
+
+Resources:
+
+  SecurityGroupStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${S3ServiceName}/${S3ArtifactsPath}/open-shift/cloudformation/open-shift-security-groups.yml'
+      Parameters:
+        StackName: !Ref AWS::StackName
+        VpcId: !Ref VpcId
+        VpcCIDR: !Ref VpcCIDR
