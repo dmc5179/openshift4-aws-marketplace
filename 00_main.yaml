@@ -78,3 +78,53 @@ Resources:
         VpcCIDR: !Ref VpcCidr
         AvailabilityZoneCount: !Ref AvailabilityZoneCount
         SubnetBits: !Ref SubnetBits
+
+# TODO: Incomplete
+#  ClusterInfraStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/02_cluster_infra.yaml'
+#      Parameters:
+#        VpcCIDR: !Ref VpcCidr
+#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
+#        SubnetBits: !Ref SubnetBits
+
+# TODO: Incomplete
+#  ClusterSecurityStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/03_cluster_security.yaml'
+#      Parameters:
+#        VpcCIDR: !Ref VpcCidr
+#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
+#        SubnetBits: !Ref SubnetBits
+
+# TODO: Incomplete
+#  ClusterBootstrapStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/04_cluster_bootstrap.yaml'
+#      Parameters:
+#        VpcCIDR: !Ref VpcCidr
+#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
+#        SubnetBits: !Ref SubnetBits
+
+# TODO: Incomplete
+#  ClusterControlPlaneStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/05_cluster_master_nodes.yaml'
+#      Parameters:
+#        VpcCIDR: !Ref VpcCidr
+#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
+#        SubnetBits: !Ref SubnetBits
+
+# TODO: Incomplete
+#  ClusterApplicationPlaneStack:
+#    Type: AWS::CloudFormation::Stack
+#    Properties:
+#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/06_cluster_worker_node.yaml'
+#      Parameters:
+#        VpcCIDR: !Ref VpcCidr
+#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
+#        SubnetBits: !Ref SubnetBits
