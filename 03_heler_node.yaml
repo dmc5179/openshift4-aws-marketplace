@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template for OpenShift Cluster Security Elements (Security Groups & IAM)
+
+Parameters:
+  ImageId:
+    Description: RHEL AMI ID
+    Type: String
+    Default: "ami"
+
+Resources:
+
+  HelperIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service:
+            - "ec2.amazonaws.com"
+          Action:
+          - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+      - PolicyName: !Join ["-", [!Ref InfrastructureName, "helper", "policy"]]
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action: "ec2:Describe*"
+            Resource: "*"
+          - Effect: "Allow"
+            Action: "ec2:AttachVolume"
+            Resource: "*"
+          - Effect: "Allow"
+            Action: "ec2:DetachVolume"
+            Resource: "*"
+          - Effect: "Allow"
+            Action: "s3:GetObject"
+            Resource: "*"
+
+  HelperInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+      - Ref: "HelperIamRole"
+
+
+  HelperInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      IamInstanceProfile: !Ref HelperInstanceProfile
+      InstanceType: "m5.large"
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: "false"
+        DeviceIndex: "0"
+#        GroupSet:
+#        - !Ref "BootstrapSecurityGroup"
+#        - !Ref "MasterSecurityGroupId"
+#        - !Ref "WorkerSecurityGroupId"
+#        SubnetId: !Ref "PublicSubnet"
+#      UserData:
+#        Fn::Base64: !Sub
+#        - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
+#        - {
+#          S3Loc: !Ref BootstrapIgnitionLocation
+#        }
+#at -f sms.sh now + 2 minutes

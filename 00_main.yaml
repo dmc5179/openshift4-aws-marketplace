@@ -63,15 +63,24 @@ Parameters:
 
 # TODO: Placeholder for Mappings
 Mappings:
-  ClassificationMap:
-      "Unclassified":
-        ClassificationText: "UNCLASSIFIED"
-        ClassificationScript: unclassified.js
-        ClassificationColor: "#5cb85c"
-      "Confidential":
-        ClassificationText: "CONFIDENTIAL"
-        ClassificationScript: confidential.js
-        ClassificationColor: "#286090"
+  RHELAmi:
+    us-east-1:
+      "HVM64": ""
+    us-east-2:
+      "HVM64": "ami-03d64741867e7bb94"
+    us-west-1:
+      "HVM64": ""
+    eu-west-1:
+      "HVM64": ""
+  RHCOSAmi:
+    us-east-1:
+      "HVM64": ""
+    us-east-2:
+      "HVM64": "ami-01424161073016df8"
+    us-west-1:
+      "HVM64": ""
+    eu-west-1:
+      "HVM64": ""
 
 # TODO: Placeholder for conditions
 #Conditions:
@@ -121,6 +130,12 @@ Resources:
         PrivateSubnets: !Sub '${AWS::StackName}-PrivateSubnetIds'
 
 # TODO: Add stack for the helper node
+  HelperNodeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/03_heler_node.yaml'
+      Parameters:
+        ImageId: !FindInMap [RHELAmi, !Ref "AWS::Region", HVM64]
 
 # TODO: Incomplete
 #  ClusterBootstrapStack:
