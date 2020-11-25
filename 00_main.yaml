@@ -24,39 +24,54 @@ Parameters:
     Description: "Size of each subnet to create within the availability zones. (Min: 5 = /27, Max: 13 = /19)"
     Type: Number
 
-Metadata:
-  AWS::CloudFormation::Interface:
-    ParameterGroups:
-    - Label:
-        default: "Network Configuration"
-      Parameters:
-      - VpcCidr
-      - SubnetBits
-    - Label:
-        default: "Availability Zones"
-      Parameters:
-      - AvailabilityZoneCount
-    ParameterLabels:
-      AvailabilityZoneCount:
-        default: "Availability Zone Count"
-      VpcCidr:
-        default: "VPC CIDR"
-      SubnetBits:
-        default: "Bits Per Subnet"
+  ClusterName:
+    AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})$
+    MaxLength: 27
+    MinLength: 1
+    ConstraintDescription: Cluster name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
+    Description: A short, representative cluster name to use for host names and other identifying names.
+    Type: String
+  InfrastructureName:
+    AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})$
+    MaxLength: 27
+    MinLength: 1
+    ConstraintDescription: Infrastructure name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
+    Description: A short, unique cluster ID used to tag cloud resources and identify items owned or used by the cluster.
+    Type: String
+  HostedZoneId:
+    Description: The Route53 public zone ID to register the targets with, such as Z21IXYZABCZ2A4.
+    Type: String
+  HostedZoneName:
+    Description: The Route53 zone to register the targets with, such as example.com. Omit the trailing period.
+    Type: String
+    Default: "example.com"
+#  PublicSubnets:
+#    Description: The internet-facing subnets.
+#    Type: List<AWS::EC2::Subnet::Id>
+#  PrivateSubnets:
+#    Description: The internal subnets.
+#    Type: List<AWS::EC2::Subnet::Id>
+#  VpcId:
+#    Description: The VPC-scoped resources will belong to this VPC.
+#    Type: AWS::EC2::VPC::Id
 
 
+
+
+
+##############################################
 
 # TODO: Placeholder for Mappings
-#Mappings:
-#  ClassificationMap:
-#      "Unclassified":
-#        ClassificationText: "UNCLASSIFIED"
-#        ClassificationScript: unclassified.js
-#        ClassificationColor: "#5cb85c"
-#      "Confidential":
-#        ClassificationText: "CONFIDENTIAL"
-#        ClassificationScript: confidential.js
-#        ClassificationColor: "#286090"
+Mappings:
+  ClassificationMap:
+      "Unclassified":
+        ClassificationText: "UNCLASSIFIED"
+        ClassificationScript: unclassified.js
+        ClassificationColor: "#5cb85c"
+      "Confidential":
+        ClassificationText: "CONFIDENTIAL"
+        ClassificationScript: confidential.js
+        ClassificationColor: "#286090"
 
 # TODO: Placeholder for conditions
 #Conditions:
@@ -70,6 +85,7 @@ Metadata:
 
 Resources:
 
+# TODO: Needs testing
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -79,25 +95,32 @@ Resources:
         AvailabilityZoneCount: !Ref AvailabilityZoneCount
         SubnetBits: !Ref SubnetBits
 
-# TODO: Incomplete
-#  ClusterInfraStack:
-#    Type: AWS::CloudFormation::Stack
-#    Properties:
-#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/02_cluster_infra.yaml'
-#      Parameters:
-#        VpcCIDR: !Ref VpcCidr
-#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
-#        SubnetBits: !Ref SubnetBits
+# TODO: Needs testing
+  ClusterInfraStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/02_cluster_infra.yaml'
+      Parameters:
+        ClusterName: !Ref ClusterName
+        InfrastructureName: !Ref InfrastructureName
+        HostedZoneId: !Ref HostedZoneId
+        HostedZoneName: !Ref HostedZoneName
+        PublicSubnets: !Sub '${AWS::StackName}-PublicSubnetIds'
+        PrivateSubnets: !Sub '${AWS::StackName}-PrivateSubnetIds'
+        VpcId: !Sub '${AWS::StackName}-VPCID'
 
-# TODO: Incomplete
-#  ClusterSecurityStack:
-#    Type: AWS::CloudFormation::Stack
-#    Properties:
-#      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/03_cluster_security.yaml'
-#      Parameters:
-#        VpcCIDR: !Ref VpcCidr
-#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
-#        SubnetBits: !Ref SubnetBits
+# TODO: Needs testing
+  ClusterSecurityStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/03_cluster_security.yaml'
+      Parameters:
+        InfrastructureName: !Ref InfrastructureName
+        VpcCidr: !Ref VpcCidr
+        VpcId: !Sub '${AWS::StackName}-VPCID'
+        PrivateSubnets: !Sub '${AWS::StackName}-PrivateSubnetIds'
+
+# TODO: Add stack for the helper node
 
 # TODO: Incomplete
 #  ClusterBootstrapStack:
@@ -105,9 +128,6 @@ Resources:
 #    Properties:
 #      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/04_cluster_bootstrap.yaml'
 #      Parameters:
-#        VpcCIDR: !Ref VpcCidr
-#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
-#        SubnetBits: !Ref SubnetBits
 
 # TODO: Incomplete
 #  ClusterControlPlaneStack:
@@ -115,9 +135,6 @@ Resources:
 #    Properties:
 #      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/05_cluster_master_nodes.yaml'
 #      Parameters:
-#        VpcCIDR: !Ref VpcCidr
-#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
-#        SubnetBits: !Ref SubnetBits
 
 # TODO: Incomplete
 #  ClusterApplicationPlaneStack:
@@ -125,6 +142,3 @@ Resources:
 #    Properties:
 #      TemplateURL: !Sub 'https://raw.githubusercontent.com/dmc5179/openshift4-aws-marketplace/main/06_cluster_worker_node.yaml'
 #      Parameters:
-#        VpcCIDR: !Ref VpcCidr
-#        AvailabilityZoneCount: !Ref AvailabilityZoneCount
-#        SubnetBits: !Ref SubnetBits
