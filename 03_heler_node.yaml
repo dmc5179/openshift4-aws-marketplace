@@ -17,6 +17,23 @@ Parameters:
     Description: A short, unique cluster ID used to tag cloud resources and identify items owned or used by the cluster.
     Type: String
     Default: "abc123"
+  PullSecretJson:
+    Description: OpenShift 4 Pull Secret JSON
+    Type: String
+    Default: "{}"
+  ClusterName:
+    AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})$
+    MaxLength: 27
+    MinLength: 1
+    ConstraintDescription: Cluster name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
+    Description: A short, representative cluster name to use for host names and other identifying names.
+    Type: String
+    Default: "ocpdan"
+  HostedZoneName:
+    Description: The Route53 zone to register the targets with, such as example.com. Omit the trailing period.
+    Type: String
+    Default: "danclark.io"
+
 
 Resources:
 
@@ -74,10 +91,57 @@ Resources:
 #        - !Ref "MasterSecurityGroupId"
 #        - !Ref "WorkerSecurityGroupId"
 #        SubnetId: !Ref "PublicSubnet"
-#      UserData:
-#        Fn::Base64: !Sub
-#        - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
-#        - {
-#          S3Loc: !Ref BootstrapIgnitionLocation
-#        }
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash -xe
+            cd /tmp
+
+            curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.6.5/openshift-client-linux-4.6.5.tar.gz
+            curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.6.5/openshift-install-linux-4.6.5.tar.gz
+
+            tar -xzf openshift-client-linux-4.6.5.tar.gz
+            mv oc kubectl /usr/local/bin
+            chown root.root /usr/local/bin/oc /usr/local/bin/kubectl
+            chmod 0755 /usr/local/bin/oc /usr/local/bin/kubectl
+            restorecon -v /usr/local/bin/oc /usr/local/bin/kubectl
+
+            rm -f README.md
+
+            tar -xzf openshift-install-linux-4.6.5.tar.gz
+            mv openshift-install /usr/local/bin/
+            chown root.root /usr/local/bin/openshift-install
+            chmod 0755 /usr/local/bin/openshift-install
+            restorecon -v /usr/local/bin/openshift-install
+            rm -f README.md
+
+            mkdir cluster
+            curl -o "/tmp/cluster/install-config.yaml" https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/config/install-config.yaml
+
+            sed -i "s/BASE_DOMAIN/${base_domain}/g" /tmp/cluster/install-config.yaml
+            sed -i "s/CLUSTER_NAME/${cluster_name}/g" /tmp/cluster/install-config.yaml
+            sed -i "s/PUBLISH/External/g" /tmp/cluster/install-config.yaml
+            sed -i "s/FIPS_ENABLED/false/g" /tmp/cluster/install-config.yaml
+            sed -i "s/PULL_SECRET/${pull_secret}/g" /tmp/cluster/install-config.yaml
+            #sed -i "s/SSH_PUB_KEY//g" /tmp/cluster/install-config.yaml
+
+            /usr/local/bin/openshift-install create manifests --dir=/tmp/cluster
+            sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' /tmp/cluster/manifests/cluster-scheduler-02-config.yml
+            /usr/local/bin/openshift-install create ignition-configs --dir=/tmp/cluster
+
+            # TODO: Upload ignition configs to S3
+
+
+          - pull_secret: !Ref PullSecretJson
+            cluster_name: !Ref ClusterName
+            base_domain: !Ref HostedZoneName
+            fips_enabled: false
+            kms_enabled: false
+
+
+
+
+
+
+
 #at -f sms.sh now + 2 minutes
