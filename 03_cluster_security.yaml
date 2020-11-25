@@ -21,6 +21,7 @@ Parameters:
   PrivateSubnets:
     Description: The internal subnets.
     Type: List<AWS::EC2::Subnet::Id>
+    AllowedPattern: '.+'
 
 Metadata:
   AWS::CloudFormation::Interface:

@@ -22,6 +22,14 @@ Parameters:
     Default: 12
     Description: "Size of each subnet to create within the availability zones. (Min: 5 = /27, Max: 13 = /19)"
     Type: Number
+  InfrastructureName:
+    AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})$
+    MaxLength: 27
+    MinLength: 1
+    ConstraintDescription: Infrastructure name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
+    Description: A short, unique cluster ID used to tag cloud resources and identify items owned or used by the cluster.
+    Type: String
+    Default: "abc123"
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -273,7 +281,7 @@ Outputs:
     Description: ID of the new VPC.
     Value: !Ref VPC
     Export:
-      Name: !Sub '${AWS::StackName}-VPCID'
+      Name: !Sub "${InfrastructureName}-VPCID"
   PublicSubnetIds:
     Description: Subnet IDs of the public subnets.
     Value:
@@ -282,7 +290,7 @@ Outputs:
         [!Ref PublicSubnet, !If [DoAz2, !Ref PublicSubnet2, !Ref "AWS::NoValue"], !If [DoAz3, !Ref PublicSubnet3, !Ref "AWS::NoValue"]]
       ]
     Export:
-      Name: !Sub '${AWS::StackName}-PublicSubnetIds'
+      Name: !Sub "${InfrastructureName}-PublicSubnetIds"
   PrivateSubnetIds:
     Description: Subnet IDs of the private subnets.
     Value:
@@ -291,4 +299,4 @@ Outputs:
         [!Ref PrivateSubnet, !If [DoAz2, !Ref PrivateSubnet2, !Ref "AWS::NoValue"], !If [DoAz3, !Ref PrivateSubnet3, !Ref "AWS::NoValue"]]
       ]
     Export:
-      Name: !Sub '${AWS::StackName}-PrivateSubnetIds'
+      Name: !Sub "${InfrastructureName}-PrivateSubnetIds"
