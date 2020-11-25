@@ -123,7 +123,7 @@ Resources:
             rm -f README.md
 
             mkdir cluster
-            curl -o "/tmp/cluster/install-config.yaml" https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/config/install-config.yaml
+            /usr/local/bin/aws s3 cp "s3://${bucket}/openshift4-marketplace/config/install-config.yaml" /tmp/cluster/install-config.yaml
 
             sed -i "s/BASE_DOMAIN/${base_domain}/g" /tmp/cluster/install-config.yaml
             sed -i "s/CLUSTER_NAME/${cluster_name}/g" /tmp/cluster/install-config.yaml
