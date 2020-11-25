@@ -1,0 +1,31 @@
+apiVersion: v1
+baseDomain: BASE_DOMAIN
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  replicas: 3
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: CLUSTER_NAME
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 10.0.0.0/16
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  none: {}
+publish: PUBLISH
+fips: FIPS_ENABLED
+pullSecret: 'PULL_SECRET'
+sshKey: |
+  ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDAIST9O0NYj5umDP5XAM/XJAG6kctBGl2IEIYOVj1xB0j+z/7OTo/8/aKALoTK15cVnji3vaDPv9T5vGQW0UfTM0aHjUzL0VD8H4lf4QJtH7F8+iyO0A1DRHqfpW3UAdfeVHGhdiy27oAJ7LDDZUM+Kl+hzPC1G6V2L6C85WH8nWPjxL/sNyWos9J6Ed4l/FFPQO6tucdtfWm3NZmqATc95e0hu0XmIS9NTTFEIDLPKToTclBOa3gIzLkvAAHYfs/CbAzF7SzLhuBbgiYRwvGnX8CfEavk+pbTgB3MGnG1JcxBAuDe4QAHY03JEGFwkQHI/3vc+cPz7tgZV01icHn/
