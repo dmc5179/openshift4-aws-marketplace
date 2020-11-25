@@ -68,7 +68,7 @@ Resources:
             Action: "ec2:DetachVolume"
             Resource: "*"
           - Effect: "Allow"
-            Action: "s3:GetObject"
+            Action: "s3:*"
             Resource: "*"
 
   HelperInstanceProfile:
