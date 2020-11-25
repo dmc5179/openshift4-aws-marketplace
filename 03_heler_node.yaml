@@ -84,7 +84,7 @@ Resources:
       InstanceType: "m5.large"
       KeyName: !Ref KeyName
       NetworkInterfaces:
-      - AssociatePublicIpAddress: "false"
+      - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"
 #        GroupSet:
 #        - !Ref "BootstrapSecurityGroup"
