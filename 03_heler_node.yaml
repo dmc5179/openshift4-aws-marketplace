@@ -6,6 +6,9 @@ Parameters:
     Description: RHEL AMI ID
     Type: String
     Default: "ami"
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
 
 Resources:
 
@@ -54,6 +57,7 @@ Resources:
       ImageId: !Ref ImageId
       IamInstanceProfile: !Ref HelperInstanceProfile
       InstanceType: "m5.large"
+      KeyName: !Ref KeyName
       NetworkInterfaces:
       - AssociatePublicIpAddress: "false"
         DeviceIndex: "0"
