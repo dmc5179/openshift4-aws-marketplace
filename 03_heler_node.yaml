@@ -139,7 +139,7 @@ Resources:
             /usr/local/bin/openshift-install create ignition-configs --dir=/tmp/cluster
 
             # TODO: Upload ignition configs to S3
-            /usr/local/bin/aws s3 cp --exclude='*' --include='*.ign' --recursive /tmp/cluster/ "s3://${bucket}/ignition/"
+            /usr/local/bin/aws s3 cp --recursive --exclude='*' --include='*.ign' --include='auth/*' /tmp/cluster/ "s3://${bucket}/ignition/"
 
             # Signal to the main stack that we're done
             curl -X PUT -H 'Content-Type:' --data-binary \
