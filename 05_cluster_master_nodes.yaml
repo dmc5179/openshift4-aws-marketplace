@@ -217,12 +217,18 @@ Resources:
         GroupSet:
         - !Ref "MasterSecurityGroupId"
         SubnetId: !Ref "Master0Subnet"
+#      UserData:
+#        Fn::Base64: !Sub
+#        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+#        - {
+#          SOURCE: !Ref IgnitionLocation,
+#          CA_BUNDLE: !Ref CertificateAuthorities,
+#        }
       UserData:
         Fn::Base64: !Sub
-        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+        - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
         - {
-          SOURCE: !Ref IgnitionLocation,
-          CA_BUNDLE: !Ref CertificateAuthorities,
+          S3Loc: !Ref IgnitionLocation
         }
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
@@ -269,12 +275,18 @@ Resources:
         GroupSet:
         - !Ref "MasterSecurityGroupId"
         SubnetId: !Ref "Master1Subnet"
+#      UserData:
+#        Fn::Base64: !Sub
+#        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+#        - {
+#          SOURCE: !Ref IgnitionLocation,
+#          CA_BUNDLE: !Ref CertificateAuthorities,
+#        }
       UserData:
         Fn::Base64: !Sub
-        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+        - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
         - {
-          SOURCE: !Ref IgnitionLocation,
-          CA_BUNDLE: !Ref CertificateAuthorities,
+          S3Loc: !Ref IgnitionLocation
         }
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
@@ -321,12 +333,18 @@ Resources:
         GroupSet:
         - !Ref "MasterSecurityGroupId"
         SubnetId: !Ref "Master2Subnet"
+#      UserData:
+#        Fn::Base64: !Sub
+#        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+#        - {
+#          SOURCE: !Ref IgnitionLocation,
+#          CA_BUNDLE: !Ref CertificateAuthorities,
+#        }
       UserData:
         Fn::Base64: !Sub
-        - '{"ignition":{"config":{"merge":[{"source":"${SOURCE}"}]},"security":{"tls":{"certificateAuthorities":[{"source":"${CA_BUNDLE}"}]}},"version":"3.1.0"}}'
+        - '{"ignition":{"config":{"replace":{"source":"${S3Loc}"}},"version":"3.1.0"}}'
         - {
-          SOURCE: !Ref IgnitionLocation,
-          CA_BUNDLE: !Ref CertificateAuthorities,
+          S3Loc: !Ref IgnitionLocation
         }
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]

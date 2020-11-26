@@ -432,6 +432,7 @@ Resources:
             - "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer"
             - "elasticloadbalancing:SetLoadBalancerPoliciesOfListener"
             - "kms:DescribeKey"
+            - "s3:*"
             Resource: "*"
 
   MasterInstanceProfile:
@@ -461,6 +462,7 @@ Resources:
             Action:
             - "ec2:DescribeInstances"
             - "ec2:DescribeRegions"
+            - "s3:*"
             Resource: "*"
 
   WorkerInstanceProfile:
