@@ -138,13 +138,17 @@ Resources:
             sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' /tmp/cluster/manifests/cluster-scheduler-02-config.yml
             /usr/local/bin/openshift-install create ignition-configs --dir=/tmp/cluster
 
-            # TODO: Upload ignition configs to S3
             /usr/local/bin/aws s3 cp --recursive --exclude='*' --include='*.ign' --include='auth/*' /tmp/cluster/ "s3://${bucket}/ignition/"
 
             # Signal to the main stack that we're done
             curl -X PUT -H 'Content-Type:' --data-binary \
             '{"Status" : "SUCCESS","Reason" : "Configuration Complete","UniqueId" : "ID1234","Data" : "Application has completed configuration."}' \
             "${signal_url}"
+
+            # TODO: Add in code to approve CSRs as they come in. Not sure how long to do this for
+
+
+            # TODO: Add in code to deploy the AWS EBS CSI Storage Driver
 
 
           - pull_secret: !Ref PullSecretJson
