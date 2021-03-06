@@ -151,6 +151,10 @@ Resources:
         ToPort: 19531
         FromPort: 19531
         CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        ToPort: 22
+        FromPort: 22
+        CidrIp: 0.0.0.0/0
       VpcId: !Ref VpcId
 
   BootstrapInstance:
@@ -159,6 +163,9 @@ Resources:
       ImageId: !Ref RhcosAmi
       IamInstanceProfile: !Ref BootstrapInstanceProfile
       InstanceType: "i3.large"
+      Tags:
+        - Key: 'Name'
+          Value: 'openshift4-bootstrap'
       NetworkInterfaces:
       - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"

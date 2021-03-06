@@ -59,7 +59,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
-        CidrIp: !Ref VpcCidr
+        CidrIp: 0.0.0.0/0
       - IpProtocol: tcp
         ToPort: 6443
         FromPort: 6443
@@ -82,7 +82,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
-        CidrIp: !Ref VpcCidr
+        CidrIp: 0.0.0.0/0
       VpcId: !Ref VpcId
 
   MasterIngressEtcd:

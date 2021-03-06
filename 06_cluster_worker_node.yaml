@@ -176,6 +176,8 @@ Resources:
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
         Value: "shared"
+      - Key: 'Name'
+        Value: 'openshift4-worker'
 
 Outputs:
   PrivateIP:

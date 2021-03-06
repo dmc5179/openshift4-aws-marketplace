@@ -28,15 +28,27 @@ Parameters:
     ConstraintDescription: Cluster name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
     Description: A short, representative cluster name to use for host names and other identifying names.
     Type: String
-    Default: "ocpdan"
+    Default: "mycluster"
   HostedZoneName:
     Description: The Route53 zone to register the targets with, such as example.com. Omit the trailing period.
     Type: String
-    Default: "danclark.io"
+    Default: "example.com"
   SignalUrl:
     Description: Signal URL for wait condition in main stack
     Type: String
     Default: "{}"
+  OpenShiftVersion:
+    Default: "4.6.20"
+    Description: OpenShift Version Number
+    Type: String
+  S3BucketName:
+    Description: S3 Bucket for config and ignition
+    Type: String
+    Default: "redhat-dan"
+  S3BucketPath:
+    Description: S3 Bucket path for config and ignition
+    Type: String
+    Default: "openshift4-marketplace"
 
 Resources:
 
@@ -86,6 +98,9 @@ Resources:
       IamInstanceProfile: !Ref HelperInstanceProfile
       InstanceType: "m5.large"
       KeyName: !Ref KeyName
+      Tags:
+        - Key: 'Name'
+          Value: 'openshift4-helper-node'
       NetworkInterfaces:
       - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"
@@ -104,10 +119,10 @@ Resources:
             python3 -m pip install --upgrade pip
             python3 -m pip install awscli
 
-            curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.6.5/openshift-client-linux-4.6.5.tar.gz
-            curl -O https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/4.6.5/openshift-install-linux-4.6.5.tar.gz
+            curl -O "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${openshift_version}/openshift-client-linux-${openshift_version}.tar.gz"
+            curl -O "https://mirror.openshift.com/pub/openshift-v4/x86_64/clients/ocp/${openshift_version}/openshift-install-linux-${openshift_version}.tar.gz"
 
-            tar -xzf openshift-client-linux-4.6.5.tar.gz
+            tar -xzf "openshift-client-linux-${openshift_version}.tar.gz"
             mv oc kubectl /usr/local/bin
             chown root.root /usr/local/bin/oc /usr/local/bin/kubectl
             chmod 0755 /usr/local/bin/oc /usr/local/bin/kubectl
@@ -115,7 +130,7 @@ Resources:
 
             rm -f README.md
 
-            tar -xzf openshift-install-linux-4.6.5.tar.gz
+            tar -xzf "openshift-install-linux-${openshift_version}.tar.gz"
             mv openshift-install /usr/local/bin/
             chown root.root /usr/local/bin/openshift-install
             chmod 0755 /usr/local/bin/openshift-install
@@ -123,22 +138,24 @@ Resources:
             rm -f README.md
 
             mkdir cluster
-            /usr/local/bin/aws s3 cp "s3://${bucket}/openshift4-marketplace/config/install-config.yaml" /tmp/cluster/install-config.yaml
+            /usr/local/bin/aws s3 cp "s3://${bucket}/${bucket_path}/config/install-config.yaml" /tmp/cluster/install-config.yaml
+
+            #Generate SSH keys for cluster
+            ssh-keygen -b 2048 -t rsa -f /root/.ssh/id_rsa -N ''
+            SSH_PUB_KEY=$(cat /root/.ssh/id_rsa.pub)
 
             sed -i "s/BASE_DOMAIN/${base_domain}/g" /tmp/cluster/install-config.yaml
             sed -i "s/CLUSTER_NAME/${cluster_name}/g" /tmp/cluster/install-config.yaml
             sed -i "s/PUBLISH/External/g" /tmp/cluster/install-config.yaml
             sed -i "s/FIPS_ENABLED/false/g" /tmp/cluster/install-config.yaml
-            # TODO: Pull secret sed is losing " and causing error
-            #sed -i "s/PULL_SECRET/${pull_secret}/g" /tmp/cluster/install-config.yaml
-            #sed -i "s/SSH_PUB_KEY//g" /tmp/cluster/install-config.yaml
-            # TODO: Add sed for machine cidr from VPC CIDR
+            sed -i 's|PULL_SECRET|${pull_secret}|g' /tmp/cluster/install-config.yaml
+            sed -i "s|SSH_PUB_KEY|'$SSH_PUB_KEY'|g" /tmp/cluster/install-config.yaml
 
             /usr/local/bin/openshift-install create manifests --dir=/tmp/cluster
             sed -i 's/mastersSchedulable: true/mastersSchedulable: false/g' /tmp/cluster/manifests/cluster-scheduler-02-config.yml
             /usr/local/bin/openshift-install create ignition-configs --dir=/tmp/cluster
 
-            /usr/local/bin/aws s3 cp --recursive --exclude='*' --include='*.ign' --include='auth/*' /tmp/cluster/ "s3://${bucket}/ignition/"
+            /usr/local/bin/aws s3 cp --recursive --exclude='*' --include='*.ign' --include='auth/*' /tmp/cluster/ "s3://${bucket}/${bucket_path}/ignition/"
 
             # Signal to the main stack that we're done
             curl -X PUT -H 'Content-Type:' --data-binary \
@@ -156,13 +173,9 @@ Resources:
             base_domain: !Ref HostedZoneName
             fips_enabled: false
             kms_enabled: false
-            bucket: 'redhat-dan'
+            bucket: !Ref S3BucketName
+            bucket_path: !Ref S3BucketPath
+            openshift_version: !Ref OpenShiftVersion
             signal_url: !Ref SignalUrl
-
-
-
-
-
-
 
 #at -f sms.sh now + 2 minutes

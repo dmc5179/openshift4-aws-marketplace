@@ -233,6 +233,8 @@ Resources:
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
         Value: "shared"
+      - Key: 'Name'
+        Value: 'openshift4-master0'
 
   RegisterMaster0:
     Condition: DoRegistration
@@ -291,6 +293,8 @@ Resources:
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
         Value: "shared"
+      - Key: 'Name'
+        Value: 'openshift4-master1'
 
   RegisterMaster1:
     Condition: DoRegistration
@@ -349,6 +353,8 @@ Resources:
       Tags:
       - Key: !Join ["", ["kubernetes.io/cluster/", !Ref InfrastructureName]]
         Value: "shared"
+      - Key: 'Name'
+        Value: 'openshift4-master2'
 
   RegisterMaster2:
     Condition: DoRegistration
