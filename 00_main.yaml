@@ -37,7 +37,7 @@ Parameters:
     ConstraintDescription: Cluster name must be alphanumeric, start with a letter, and have a maximum of 27 characters.
     Description: A short, representative cluster name to use for host names and other identifying names.
     Type: String
-    Default: "mycluster"
+    Default: "openshift"
   InfrastructureName:
     AllowedPattern: ^([a-zA-Z][a-zA-Z0-9\-]{0,26})$
     MaxLength: 27
@@ -53,34 +53,38 @@ Parameters:
   HostedZoneName:
     Description: The Route53 zone to register the targets with, such as example.com. Omit the trailing period.
     Type: String
-    Default: ""
+    Default: "example.com"
+  OpenShiftVersion:
+    Default: "4.6.20"
+    Description: OpenShift Version Number
+    Type: String
   S3BucketName:
     Description: S3 Bucket for config and ignition
     Type: String
-    Default: ""
+    Default: "mybucket"
+  S3BucketPath:
+    Description: S3 Bucket path for config and ignition
+    Type: String
+    Default: "mypath"
 
 ##############################################
 
-# TODO: Placeholder for Mappings
 Mappings:
   RHELAmi:
     us-east-1:
-      "HVM64": ""
+      "HVM64": "ami-096fda3c22c1c990a"
     us-east-2:
       "HVM64": "ami-03d64741867e7bb94"
-    us-west-1:
-      "HVM64": ""
-    eu-west-1:
-      "HVM64": ""
-  RHCOSAmi:
+  AmzLinuxAmi:
     us-east-1:
-      "HVM64": ""
+      "HVM64": "ami-0915bcb5fa77e4892"
     us-east-2:
-      "HVM64": "ami-01424161073016df8"
-    us-west-1:
-      "HVM64": ""
-    eu-west-1:
-      "HVM64": ""
+      "HVM64": "ami-09246ddb00c7c4fef"
+  RHCOSAmi:  #RHCOS 4.6 AMIs for now
+    us-east-1:
+      "HVM64": "ami-0d150d6319d93985c"
+    us-east-2:
+      "HVM64": "ami-078da2ca2cc850ace"
 
 # TODO: Placeholder for conditions
 #Conditions:
@@ -97,7 +101,8 @@ Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/01_vpc.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "01_vpc.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/01_vpc.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         VpcCidr: !Ref VpcCidr
@@ -119,7 +124,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: VPCStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/02_cluster_infra.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "02_cluster_infra.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/02_cluster_infra.yaml'
       Parameters:
         ClusterName: !Ref ClusterName
         InfrastructureName: !Ref InfrastructureName
@@ -129,39 +135,41 @@ Resources:
         PrivateSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
         VpcId: !GetAtt VPCStack.Outputs.VpcId
 
-# TODO: Needs testing
   ClusterSecurityStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterInfraStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/03_cluster_security.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "03_cluster_security.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/03_cluster_security.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         VpcCidr: !Ref VpcCidr
         VpcId: !GetAtt VPCStack.Outputs.VpcId
         PrivateSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
 
-# TODO: Add stack for the helper node
   HelperNodeStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterSecurityStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/03_heler_node.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "03_heler_node.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/03_heler_node.yaml'
       Parameters:
-        ImageId: !FindInMap [RHELAmi, !Ref "AWS::Region", HVM64]
+        ImageId: !FindInMap [AmzLinuxAmi, !Ref "AWS::Region", HVM64]
         KeyName: !Ref KeyName
         InfrastructureName: !Ref InfrastructureName
         PullSecretJson: !Ref PullSecretJson
         ClusterName: !Ref ClusterName
         HostedZoneName: !Ref HostedZoneName
         SignalUrl: !Ref HelperNodeWaitHandle
+        S3BucketName: !Ref S3BucketName
+        S3BucketPath: !Ref S3BucketPath
 
-# TODO: Incomplete
   ClusterBootstrapStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: HelperNodeWaitCondition
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/04_cluster_bootstrap.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "04_cluster_bootstrap.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/04_cluster_bootstrap.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         RhcosAmi: !FindInMap [RHCOSAmi, !Ref "AWS::Region", HVM64]
@@ -171,19 +179,19 @@ Resources:
           - !Split [ ",", !GetAtt VPCStack.Outputs.PublicSubnetIds ]
         MasterSecurityGroupId: !GetAtt ClusterSecurityStack.Outputs.MasterSecurityGroupId
         VpcId: !GetAtt VPCStack.Outputs.VpcId
-        BootstrapIgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', 'ignition', 'bootstrap.ign' ] ]
+        BootstrapIgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', !Ref S3BucketPath, 'ignition', 'bootstrap.ign' ] ]
         #AutoRegisterELB: "yes"
         RegisterNlbIpTargetsLambdaArn: !GetAtt ClusterInfraStack.Outputs.RegisterNlbIpTargetsLambda
         ExternalApiTargetGroupArn: !GetAtt ClusterInfraStack.Outputs.ExternalApiTargetGroupArn
         InternalApiTargetGroupArn: !GetAtt ClusterInfraStack.Outputs.InternalApiTargetGroupArn
         InternalServiceTargetGroupArn: !GetAtt ClusterInfraStack.Outputs.InternalServiceTargetGroupArn
 
-# TODO: Needs testing
   ClusterControlPlaneStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterBootstrapStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/05_cluster_master_nodes.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "05_cluster_master_nodes.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/05_cluster_master_nodes.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         RhcosAmi: !FindInMap [RHCOSAmi, !Ref "AWS::Region", HVM64]
@@ -200,7 +208,7 @@ Resources:
           - 2
           - !Split [ ",", !GetAtt VPCStack.Outputs.PrivateSubnetIds ]
         MasterSecurityGroupId: !GetAtt ClusterSecurityStack.Outputs.MasterSecurityGroupId
-        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', 'ignition', 'master.ign' ] ]
+        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', !Ref S3BucketPath, 'ignition', 'master.ign' ] ]
         #CertificateAuthorities:
         MasterInstanceProfileName: !GetAtt ClusterSecurityStack.Outputs.MasterInstanceProfile
         MasterInstanceType: 'm5.xlarge'
@@ -210,12 +218,12 @@ Resources:
         InternalApiTargetGroupArn: !GetAtt ClusterInfraStack.Outputs.InternalApiTargetGroupArn
         InternalServiceTargetGroupArn: !GetAtt ClusterInfraStack.Outputs.InternalServiceTargetGroupArn
 
-# TODO: Needs testing
   ClusterApplicationPlaneStack:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterControlPlaneStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "06_cluster_worker_node.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         RhcosAmi: !FindInMap [RHCOSAmi, !Ref "AWS::Region", HVM64]
@@ -223,17 +231,17 @@ Resources:
           - 0
           - !Split [ ",", !GetAtt VPCStack.Outputs.PrivateSubnetIds ]
         WorkerSecurityGroupId: !GetAtt ClusterSecurityStack.Outputs.WorkerSecurityGroupId
-        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', 'ignition', 'worker.ign' ] ]
+        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', !Ref S3BucketPath, 'ignition', 'worker.ign' ] ]
         #CertificateAuthorities:
         WorkerInstanceProfileName: !GetAtt ClusterSecurityStack.Outputs.WorkerInstanceProfile
         WorkerInstanceType: 'm5.2xlarge'
 
-# TODO: Needs testing
   ClusterApplicationPlaneStack2:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterControlPlaneStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
+      TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "06_cluster_worker_node.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         RhcosAmi: !FindInMap [RHCOSAmi, !Ref "AWS::Region", HVM64]
@@ -241,17 +249,17 @@ Resources:
           - 1
           - !Split [ ",", !GetAtt VPCStack.Outputs.PrivateSubnetIds ]
         WorkerSecurityGroupId: !GetAtt ClusterSecurityStack.Outputs.WorkerSecurityGroupId
-        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', 'ignition', 'worker.ign' ] ]
+        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', !Ref S3BucketPath, 'ignition', 'worker.ign' ] ]
         #CertificateAuthorities:
         WorkerInstanceProfileName: !GetAtt ClusterSecurityStack.Outputs.WorkerInstanceProfile
         WorkerInstanceType: 'm5.2xlarge'
 
-# TODO: Needs testing
   ClusterApplicationPlaneStack3:
     Type: AWS::CloudFormation::Stack
     DependsOn: ClusterControlPlaneStack
     Properties:
-      TemplateURL: !Sub 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
+      #TemplateURL: !Join ["/", ["https:/", !Ref S3BucketName, ".s3.amazonaws.com", !Ref S3BucketPath, "06_cluster_worker_node.yaml"]]
+      TemplateURL: 'https://redhat-dan.s3.amazonaws.com/openshift4-marketplace/06_cluster_worker_node.yaml'
       Parameters:
         InfrastructureName: !Ref InfrastructureName
         RhcosAmi: !FindInMap [RHCOSAmi, !Ref "AWS::Region", HVM64]
@@ -259,7 +267,7 @@ Resources:
           - 2
           - !Split [ ",", !GetAtt VPCStack.Outputs.PrivateSubnetIds ]
         WorkerSecurityGroupId: !GetAtt ClusterSecurityStack.Outputs.WorkerSecurityGroupId
-        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', 'ignition', 'worker.ign' ] ]
+        IgnitionLocation: !Join [ '/', [ 's3:/', !Ref 'S3BucketName', !Ref S3BucketPath, 'ignition', 'worker.ign' ] ]
         #CertificateAuthorities:
         WorkerInstanceProfileName: !GetAtt ClusterSecurityStack.Outputs.WorkerInstanceProfile
         WorkerInstanceType: 'm5.2xlarge'
