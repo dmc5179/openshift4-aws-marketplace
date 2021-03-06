@@ -104,11 +104,11 @@ Resources:
       NetworkInterfaces:
       - AssociatePublicIpAddress: "true"
         DeviceIndex: "0"
-#        GroupSet:
-#        - !Ref "BootstrapSecurityGroup"
-#        - !Ref "MasterSecurityGroupId"
-#        - !Ref "WorkerSecurityGroupId"
-#        SubnetId: !Ref "PublicSubnet"
+        GroupSet:
+        - !Ref "BootstrapSecurityGroup"
+        - !Ref "MasterSecurityGroupId"
+        - !Ref "WorkerSecurityGroupId"
+        SubnetId: !Ref "PublicSubnet"
       UserData:
         Fn::Base64: !Sub
           - |
@@ -162,7 +162,9 @@ Resources:
             '{"Status" : "SUCCESS","Reason" : "Configuration Complete","UniqueId" : "ID1234","Data" : "Application has completed configuration."}' \
             "${signal_url}"
 
-            # TODO: Add in code to approve CSRs as they come in. Not sure how long to do this for
+            /usr/local/bin/aws s3 cp "s3://${bucket}/${bucket_path}/config/csr_approver.sh" /usr/local/bin/csr_approver.sh
+            chmod +x /usr/local/bin/csr_approver.sh
+            echo '*/1 * * * * /usr/local/bin/csr_approver.sh' >> /var/spool/cron/root
 
 
             # TODO: Add in code to deploy the AWS EBS CSI Storage Driver
